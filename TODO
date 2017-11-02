@@ -1,0 +1,37 @@
+TODO:
+
+- use HTML5
+
+- don't become too complex
+
+- how to handle index.html if existing?
+
+- internationalization?
+
+- directory index
+
+  - sorting by different data (date/time, size, file type, alphabetically, ...)
+  - maybe different views like in Kodi
+  - maybe showing indexes only for images, videos, ...?
+  - album directory image for sub-directories?
+
+- GPS data
+
+  - show map with points for all picture locations - show data/picture on point?
+  - show GPS data as map when viewing a picture
+
+- image views
+
+  - use links to create image of specified size
+  - slideshow?
+  - implement zooming feature instead of choosing an image size
+  - show image data
+
+- Caches (configurable time limit up to eternal)
+
+
+Not yet sure:
+
+- Allow comments?
+- Integrate with social media
+- 
