@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>[% TITLE %]</title>
+	<title>{ $TITLE }</title>
 	<!--{ $CSS }
 	{ $ENCODING }
 	{ $NAVIGATION } -->
@@ -9,16 +9,16 @@
 
 <body>
 	<header id="header">
-		<h1>[% TITLE %]</h1>
+		<h1>{ $TITLE }</h1>
 	</header>
 
 	<nav id="navigation">
-		[% MAIN %]
+		{ $MAIN }
 	</nav>
 
 	<footer id="footer">
 		<div id="copyright">
-			<p>This page was created by [% PACKAGE %].</p>
+			<p>This page was created by { $PACKAGE }.</p>
 		</div>
 	</footer>
 </body>

@@ -18,7 +18,7 @@ use Apache2::Const -compile => qw(OK DECLINED NOT_FOUND SERVER_ERROR :http :log)
 
 #use POSIX;
 #use Locale::TextDomain 'Apache2-PhotoGal';
-use Template;
+use Text::Template;
 
 sub handler {
         my $r = shift;
@@ -71,11 +71,10 @@ sub create_page {
 		return log_message($r, Apache2::Const::SERVER_ERROR, 'PhotoGalTemplateDir not set or not existing', $dir);
 	}
 
-	my $template = Template->new({
-		INCLUDE_PATH  => $dir,
-		PRE_PROCESS   => 'config',
-		OUTPUT        => $r,
-	}) or return log_message($r, Apache2::Const::SERVER_ERROR, Template->error);
+	my $template = Text::Template->new(
+		TYPE => 'FILE',
+		SOURCE  => "$dir/$file",
+	) or return log_message($r, Apache2::Const::SERVER_ERROR, $Text::Template::ERROR); 
 
 	my $vars = {
 		TITLE => 'Mein Titel',
@@ -87,9 +86,9 @@ sub create_page {
 	$r->content_type('text/html');
 	#$r->content_encoding('gzip');
 
-	$template->process($file, $vars) ||
-		return log_message($r, Apache2::Const::SERVER_ERROR, $template->error());
-	$r->print("foo");
+	my $tmp = $template->fill_in(HASH => $vars) ||
+		return log_message($r, Apache2::Const::SERVER_ERROR, $Text::Template::ERROR);
+	$r->print($tmp);
 	return Apache2::Const::OK;
 }
 
