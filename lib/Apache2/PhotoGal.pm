@@ -5,7 +5,6 @@ use strict;
 use warnings;
 
 use vars qw($VERSION);
-use feature 'current_sub';
 
 $VERSION = "0.0.1";
 
@@ -15,27 +14,123 @@ use Apache2::Log;
 use Apache2::Reload;
 use Apache2::RequestRec ();
 use Apache2::RequestIO ();
+use Apache2::Const -compile => qw(OK DECLINED NOT_FOUND SERVER_ERROR :http :log);
 
-use Apache2::Const -compile => qw(OK :log);
+#use POSIX;
+#use Locale::TextDomain 'Apache2-PhotoGal';
+use Template;
 
 sub handler {
         my $r = shift;
-	my $image_pattern = $r->dir_config('myPhotoGalImagePattern') ? $r->dir_config('PhotoGalImagePattern') : '\.(jpe?g|png|svg|tiff?)$';
-	my $video_pattern = $r->dir_config('myPhotoGalVideoPattern') ? $r->dir_config('PhotoGalVideoPattern') : '\.(flv|mpe?g|mp4|ogg|webm)$';
 
-        my $alog = $r->log;
-        $alog->crit(__PACKAGE__, ': handler setting up pattern');
+	# don't handle these files / how to handle index.html if existing?
+	if ($r->uri =~ m|/favicon.ico|i) {
+		return Apache2::Const::DECLINED;
+	}
 
-        $r->content_type('text/plain');
-	$r->print("URI is: " . $r->uri . "\n");
-        $r->print("Now is: " . scalar(localtime) . "\n");
-	$r->print("Image pattern is: " . $image_pattern . "\n");
+	$r->log->debug(__PACKAGE__, " uri->" . $r->uri . ", filename->", $r->filename, ", path_info->", $r->path_info);
 
+	# mod_dir and mod_autoindex tamper with these variables
+	my $filename = $r->filename . $r->path_info;
+
+	if (-d $filename) { # handle directory content
+		# TODO
+		# handle mod_dir by checking if APR->path is .*/$ ??!
+		my $tpl = $r->dir_config('PhotoGalTemplatePageDir') ?
+		          $r->dir_config('PhotoGalTemplatePageDir') : 'page_directory.tpl';
+		return create_page($r, $tpl);
+	}
+	elsif (-f $filename) {
+		# handle pages based on content
+		# TODO
+		# serve text files as is, only handle images, videos, ...?
+		my $image_pattern = $r->dir_config('PhotoGalImagePattern') ?
+		                    $r->dir_config('PhotoGalImagePattern') : '\.(jpe?g|png|svg|tiff?)$';
+		my $video_pattern = $r->dir_config('PhotoGalVideoPattern') ?
+		                    $r->dir_config('PhotoGalVideoPattern') : '\.(flv|mpe?g|mp4|ogg|webm)$';
+		return Apache2::Const::OK;
+	}
+	# handle something like foo.jpg?width=... and show resized picture
+	else {
+		# serve 404
+		return Apache2::Const::NOT_FOUND;
+	}
+
+	#get_language_list($r);
+
+	# shouldn't get here
         return Apache2::Const::OK;
 }
+
+# show page and return HTTP code accordingly?
+sub create_page {
+	my ($r, $file) = @_;
+	
+	my $dir = $r->dir_config('PhotoGalTemplateDir');
+	unless (-d $dir) {
+		return log_message($r, Apache2::Const::SERVER_ERROR, 'PhotoGalTemplateDir not set or not existing', $dir);
+	}
+
+	my $template = Template->new({
+		INCLUDE_PATH  => $dir,
+		PRE_PROCESS   => 'config',
+		OUTPUT        => $r,
+	}) or return log_message($r, Apache2::Const::SERVER_ERROR, Template->error);
+
+	my $vars = {
+		TITLE => 'Mein Titel',
+		MAIN => "<!-- " . __PACKAGE__ . "," . __LINE__ . ": directory = $dir -->",
+		HOMEPAGE => 'https://github.com/dleidert/Apache2-PhotoGal.git',
+		PACKAGE => '<a href="">' . __PACKAGE__ . " ($VERSION)" . '</a>',
+	};
+
+	$r->content_type('text/html');
+	#$r->content_encoding('gzip');
+
+	$template->process($file, $vars) ||
+		return log_message($r, Apache2::Const::SERVER_ERROR, $template->error());
+	$r->print("foo");
+	return Apache2::Const::OK;
+}
+
+#sub get_language_list {
+#	my $r = shift;
+#	return unless $r;
+#
+#	my @list = grep(/^\w+(-\w+)?$/, split(/,|;/, $r->headers_in->get('Accept-Language')));
+#	$r->log->debug(__PACKAGE__, "Extracted Language codes are: " . join(', ', @list) . "\n");
+#	return @list;
+#}
+
+sub log_message {
+	my ($r, $status, $message, $file) = @_;
+	if ($file) {
+		$r->log_reason(__PACKAGE__ . ": " . $message, $file);
+	} else {
+		$r->log_error(__PACKAGE__ . ": " . $message)
+	}
+	#$r->log->error(__PACKAGE__ . " (" . $file . ") " . $message);
+	return $status;
+}
+
+#sub get_page_language {
+#	my ($r, $lang) = @_;
+#	return unless $r; 
+#
+#	my @acc_lang_string = grep(/^\w+(-\w+)?$/, split(/,|;/, $r->headers_in->get('Accept-Language')));
+#	#my $gal_conf_lang = $r->dir_config('PhotoGalVideoPattern') ? $r->dir_config('PhotoGalVideoPattern') : '';
+#	if ($r->dir_config('PhotoGalAcceptedLanguagePattern')) { # should be regex as seen above!
+#		# now loop over join(@acc_lang_string) and find us first match
+#	}
+#	# if nothing matches, return default!
+#	# maybe create sub that returns the list of supported languages 
+#	# TODO loop @acc_ over existing translations and return first matching!
+#	$r->print("Accept-Language: " . $r->headers_in->get('Accept-Language') . "\n");
+#	$r->print("Language codes are: " . join(', ', @acc_lang_string) . "\n");
+#	return;
+#}
+
 1;
-
-
 
 =head1 NAME
 
@@ -60,27 +155,6 @@ Perhaps a little code snippet.
 
     my $foo = Apache2::PhotoGal->new();
     ...
-
-=head1 EXPORT
-
-A list of functions that can be exported.  You can delete this section
-if you don't export anything, such as for a purely object-oriented module.
-
-=head1 SUBROUTINES/METHODS
-
-=head2 function1
-
-=cut
-
-sub function1 {
-}
-
-=head2 function2
-
-=cut
-
-sub function2 {
-}
 
 =head1 AUTHOR
 
