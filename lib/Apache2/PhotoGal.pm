@@ -16,11 +16,15 @@ use Apache2::RequestRec ();
 use Apache2::RequestIO ();
 use Apache2::Const -compile => qw(OK DECLINED NOT_FOUND SERVER_ERROR :http :log);
 
+use CGI qw(:standard);
 use Data::Dumper qw(Dumper);
 use File::Basename qw(dirname);
 #use POSIX;
 #use Locale::TextDomain 'Apache2-PhotoGal';
+use Memoize;
 use Template;
+
+my %param;
 
 sub handler {
         my $r = shift;
@@ -30,8 +34,19 @@ sub handler {
 		return Apache2::Const::DECLINED;
 	}
 
-	$r->log->debug(__PACKAGE__, " uri->" . $r->uri . ", filename->", $r->filename, ", path_info->", $r->path_info);
+	my $cgi = CGI->new();
+	if ($cgi->param('sort_by')) {
+		my @list = $cgi->param('sort_by');
+		@list = grep(/^(name|mtime)$/, @list);
+		$param{'SORT_ORDER'} = $list[0];
+	}
+	unless ($param{'SORT_ORDER'}) {
+		$param{'SORT_ORDER'} = 'name';
+	}
+	$param{'ISROOT'} = ($r->uri =~ m|^/$|) ? 1 : 0;
 
+	$r->log->debug(__PACKAGE__, Dumper($r->uri, $r->filename, $r->path_info, $cgi->param('sort_by'), \%param));
+	# $r->parse_uri($r->uri) https://perl.apache.org/docs/2.0/api/Apache2/URI.html#C_parse_uri_
 	# mod_dir and mod_autoindex tamper with these variables
 	my $filename = $r->filename . $r->path_info;
 
@@ -42,6 +57,7 @@ sub handler {
 		          $r->dir_config('PhotoGalTemplatePageDir') : 'page_directory.tpl';
 		return create_page($r, $tpl);
 	}
+
 	elsif (-f $filename) {
 		# handle pages based on content
 		# TODO
@@ -52,9 +68,8 @@ sub handler {
 		                    $r->dir_config('PhotoGalVideoPattern') : '\.(flv|mpe?g|mp4|ogg|webm)$';
 		return Apache2::Const::OK;
 	}
-	# handle something like foo.jpg?width=... and show resized picture
 	else {
-		# serve 404
+		# serve 404 or ...?
 		return Apache2::Const::NOT_FOUND;
 	}
 
@@ -99,7 +114,6 @@ sub get_files_in_curdir {
 	my $r = shift;
 
 	my $dir = $r->filename . $r->path_info;
-	$r->log->debug("dir " . $dir);
 	unless ((-d $dir) && (opendir (DIR, $dir))) {
 		log_message ($r, Apache2::Const::SERVER_ERROR, 'Cannot open directory.', $dir);
 		return;
