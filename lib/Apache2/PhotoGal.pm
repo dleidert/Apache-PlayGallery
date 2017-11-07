@@ -89,7 +89,6 @@ sub create_page {
 
 	$template->process($file, $vars) ||
 		return log_message($r, Apache2::Const::SERVER_ERROR, $template->error());
-	$r->print("foo");
 	return Apache2::Const::OK;
 }
 
