@@ -16,6 +16,8 @@ use Apache2::RequestRec ();
 use Apache2::RequestIO ();
 use Apache2::Const -compile => qw(OK DECLINED NOT_FOUND SERVER_ERROR :http :log);
 
+use Data::Dumper qw(Dumper);
+use File::Basename qw(dirname);
 #use POSIX;
 #use Locale::TextDomain 'Apache2-PhotoGal';
 use Template;
@@ -82,6 +84,7 @@ sub create_page {
 		MAIN => "<!-- " . __PACKAGE__ . "," . __LINE__ . ": directory = $dir -->",
 		HOMEPAGE => 'https://github.com/dleidert/Apache2-PhotoGal.git',
 		PACKAGE => '<a href="">' . __PACKAGE__ . " ($VERSION)" . '</a>',
+		FILELIST => [ get_files_in_curdir($r) ],
 	};
 
 	$r->content_type('text/html');
@@ -90,6 +93,32 @@ sub create_page {
 	$template->process($file, $vars) ||
 		return log_message($r, Apache2::Const::SERVER_ERROR, $template->error());
 	return Apache2::Const::OK;
+}
+
+sub get_files_in_curdir {
+	my $r = shift;
+
+	my $dir = $r->filename . $r->path_info;
+	$r->log->debug("dir " . $dir);
+	unless ((-d $dir) && (opendir (DIR, $dir))) {
+		log_message ($r, Apache2::Const::SERVER_ERROR, 'Cannot open directory.', $dir);
+		return;
+	}
+
+	my @list = readdir(DIR);
+	#while (my $file = readdir(DIR)) {
+	#	$r->log->debug("$file\n");
+	#	push @list, $file;
+	#	# add files to HASH
+	#	my $hash = (
+	#		FNAME -> $file,
+	#		FSIZE -> 
+	#	);
+	#	push @list, $hash;
+	#}
+	$r->log->debug('@list: ', Dumper(\@list));
+	closedir(DIR);
+	return @list;
 }
 
 #sub get_language_list {

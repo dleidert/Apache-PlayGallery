@@ -14,6 +14,11 @@
 
 	<nav id="navigation">
 		[% MAIN %]
+		<ul>
+[% FOREACH file IN FILELIST %]
+			<li>[% file %]</li>
+[% END %]
+		</ul>
 	</nav>
 
 	<footer id="footer">
