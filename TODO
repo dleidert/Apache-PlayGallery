@@ -6,7 +6,7 @@ TODO:
 
 - how to handle index.html if existing?
 
-- internationalization?
+- internationalization? (based on multiviews? - check if enabled?)
 
 - directory index
 
@@ -28,6 +28,8 @@ TODO:
   - show image data
 
 - Caches (configurable time limit up to eternal)
+
+- use Memoize
 
 
 Not yet sure:
