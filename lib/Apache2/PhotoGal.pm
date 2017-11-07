@@ -83,7 +83,7 @@ sub create_page {
 		TITLE => 'Mein Titel',
 		MAIN => "<!-- " . __PACKAGE__ . "," . __LINE__ . ": directory = $dir -->",
 		HOMEPAGE => 'https://github.com/dleidert/Apache2-PhotoGal.git',
-		PACKAGE => '<a href="">' . __PACKAGE__ . " ($VERSION)" . '</a>',
+		PACKAGE => __PACKAGE__ . " ($VERSION)",
 		FILELIST => [ get_files_in_curdir($r) ],
 	};
 

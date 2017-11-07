@@ -23,7 +23,7 @@
 
 	<footer id="footer">
 		<div id="copyright">
-			<p>This page was created by [% PACKAGE %].</p>
+			<p>This page was created by <a href="[% HOMEPAGE %]">[% PACKAGE %]</a>.</p>
 		</div>
 	</footer>
 </body>
