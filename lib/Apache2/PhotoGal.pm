@@ -134,12 +134,11 @@ sub get_files_in_curdir {
 sub sort_files_in_order {
 	my ($r, $dir, @list) = @_;
 	if ($param{'SORT_ORDER'} =~ /^(atime|mtime|size)$/) {
-		my $sort=$param{'SORT_ORDER'};
+		my $sort = $param{'SORT_ORDER'};
 		my %h;
-		return (sort { ($h{$a} ||= stat("$dir/$a")->$sort()) <=>
-		               ($h{$b} ||= stat("$dir/$b")->$sort())
-		             } @list) ||
-		       (sort @list);
+		return sort { ($h{$a} ||= stat("$dir/$a")->$sort()) <=>
+		              ($h{$b} ||= stat("$dir/$b")->$sort())
+		            } @list;
 	} else {
 		return sort @list;
 	}
