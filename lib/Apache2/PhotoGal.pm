@@ -15,10 +15,13 @@ use Apache2::Reload;
 use Apache2::RequestRec ();
 use Apache2::RequestIO ();
 use Apache2::Const -compile => qw(OK DECLINED NOT_FOUND SERVER_ERROR :http :log);
+use APR::Finfo;
+use APR::Const -compile => qw(FILETYPE_DIR FILETYPE_REG FINFO_NORM);
 
 use CGI qw(:standard);
 use Data::Dumper qw(Dumper);
 use File::Basename qw(dirname);
+use File::stat;
 #use POSIX;
 #use Locale::TextDomain 'Apache2-PhotoGal';
 use Memoize;
@@ -37,20 +40,16 @@ sub handler {
 	my $cgi = CGI->new();
 	if ($cgi->param('sort_by')) {
 		my @list = $cgi->param('sort_by');
-		@list = grep(/^(name|mtime)$/, @list);
+		@list = grep(/^(name|atime|mtime|size)$/, @list);
 		$param{'SORT_ORDER'} = $list[0];
 	}
-	unless ($param{'SORT_ORDER'}) {
-		$param{'SORT_ORDER'} = 'name';
-	}
+	$param{'SORT_ORDER'} = 'name' unless ($param{'SORT_ORDER'});
 	$param{'ISROOT'} = ($r->uri =~ m|^/$|) ? 1 : 0;
 
-	$r->log->debug(__PACKAGE__, Dumper($r->uri, $r->filename, $r->path_info, $cgi->param('sort_by'), \%param));
 	# $r->parse_uri($r->uri) https://perl.apache.org/docs/2.0/api/Apache2/URI.html#C_parse_uri_
 	# mod_dir and mod_autoindex tamper with these variables
-	my $filename = $r->filename . $r->path_info;
 
-	if (-d $filename) { # handle directory content
+	if ($r->finfo->filetype == APR::Const::FILETYPE_DIR) { # handle directory content
 		# TODO
 		# handle mod_dir by checking if APR->path is .*/$ ??!
 		my $tpl = $r->dir_config('PhotoGalTemplatePageDir') ?
@@ -58,7 +57,7 @@ sub handler {
 		return create_page($r, $tpl);
 	}
 
-	elsif (-f $filename) {
+	elsif ($r->finfo->filetype == APR::Const::FILETYPE_REG) {
 		# handle pages based on content
 		# TODO
 		# serve text files as is, only handle images, videos, ...?
@@ -94,12 +93,13 @@ sub create_page {
 		OUTPUT        => $r,
 	}) or return log_message($r, Apache2::Const::SERVER_ERROR, Template->error);
 
+	my $filelist = get_files_in_curdir($r);
 	my $vars = {
 		TITLE => 'Mein Titel',
 		MAIN => "<!-- " . __PACKAGE__ . "," . __LINE__ . ": directory = $dir -->",
-		HOMEPAGE => 'https://github.com/dleidert/Apache2-PhotoGal.git',
 		PACKAGE => __PACKAGE__ . " ($VERSION)",
-		FILELIST => [ get_files_in_curdir($r) ],
+		DIRLIST  => $filelist->{APR::Const::FILETYPE_DIR},
+		FILELIST => $filelist->{APR::Const::FILETYPE_REG},
 	};
 
 	$r->content_type('text/html');
@@ -110,29 +110,39 @@ sub create_page {
 	return Apache2::Const::OK;
 }
 
+# memoize function by adding mtime argument?
 sub get_files_in_curdir {
 	my $r = shift;
 
-	my $dir = $r->filename . $r->path_info;
+	my $dir = $r->finfo->fname;
 	unless ((-d $dir) && (opendir (DIR, $dir))) {
 		log_message ($r, Apache2::Const::SERVER_ERROR, 'Cannot open directory.', $dir);
 		return;
 	}
 
-	my @list = readdir(DIR);
-	#while (my $file = readdir(DIR)) {
-	#	$r->log->debug("$file\n");
-	#	push @list, $file;
-	#	# add files to HASH
-	#	my $hash = (
-	#		FNAME -> $file,
-	#		FSIZE -> 
-	#	);
-	#	push @list, $hash;
-	#}
-	$r->log->debug('@list: ', Dumper(\@list));
+	my %list;
+	my @files = grep { !/^\./ && -f "$dir/$_" } readdir(DIR);
+	rewinddir (DIR);
+	my @dirs  = grep { !/^\./ && -d "$dir/$_" } readdir(DIR);
+
+	$list{APR::Const::FILETYPE_REG} = [ sort_files_in_order($r, $dir, @files) ]; 
+	$list{APR::Const::FILETYPE_DIR} = [ sort_files_in_order($r, $dir, @dirs)  ];
 	closedir(DIR);
-	return @list;
+	return \%list;
+}
+
+sub sort_files_in_order {
+	my ($r, $dir, @list) = @_;
+	if ($param{'SORT_ORDER'} =~ /^(atime|mtime|size)$/) {
+		my $sort=$param{'SORT_ORDER'};
+		my %h;
+		return (sort { ($h{$a} ||= stat("$dir/$a")->$sort()) <=>
+		               ($h{$b} ||= stat("$dir/$b")->$sort())
+		             } @list) ||
+		       (sort @list);
+	} else {
+		return sort @list;
+	}
 }
 
 #sub get_language_list {
