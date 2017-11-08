@@ -14,6 +14,7 @@ inc/
 nytprof.out
 pod2htm*.tmp
 pm_to_blib
+.swp
 .tmp/
 Apache2-PhotoGal-*
 Apache2-PhotoGal-*.tar.gz
