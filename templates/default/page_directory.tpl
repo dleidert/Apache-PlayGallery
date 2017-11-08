@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>[% TITLE %]</title>
+	<title>[%- TITLE -%]</title>
 	<!--{ $CSS }
 	{ $ENCODING }
 	{ $NAVIGATION } -->
@@ -9,15 +9,15 @@
 
 <body>
 	<header id="header">
-		<h1>[% TITLE %]</h1>
+		<h1>[%- TITLE -%]</h1>
 	</header>
 
 	<nav id="navigation">
 		[% MAIN %]
 		<ul>
-[% FOREACH file IN FILELIST %]
-			<li>[% file %]</li>
-[% END %]
+[% FOREACH file IN FILELIST -%]
+			<li><a href="[% file %]">[% file %]</a></li>
+[% END -%]
 		</ul>
 	</nav>
 
