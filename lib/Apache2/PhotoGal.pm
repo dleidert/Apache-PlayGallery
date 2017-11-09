@@ -6,8 +6,6 @@ use warnings;
 
 use vars qw($VERSION);
 
-$VERSION = "0.0.1";
-
 use mod_perl2 2.0;
 
 use Apache2::Log;
@@ -144,14 +142,16 @@ sub sort_files_in_order {
 	}
 }
 
-#sub get_language_list {
-#	my $r = shift;
-#	return unless $r;
-#
-#	my @list = grep(/^\w+(-\w+)?$/, split(/,|;/, $r->headers_in->get('Accept-Language')));
-#	$r->log->debug(__PACKAGE__, "Extracted Language codes are: " . join(', ', @list) . "\n");
-#	return @list;
-#}
+=begin comment
+sub get_language_list {
+	my $r = shift;
+	return unless $r;
+
+	my @list = grep(/^\w+(-\w+)?$/, split(/,|;/, $r->headers_in->get('Accept-Language')));
+	$r->log->debug(__PACKAGE__, "Extracted Language codes are: " . join(', ', @list) . "\n");
+	return @list;
+}
+=end comment
 
 sub log_message {
 	my ($r, $status, $message, $file) = @_;
@@ -164,48 +164,60 @@ sub log_message {
 	return $status;
 }
 
-#sub get_page_language {
-#	my ($r, $lang) = @_;
-#	return unless $r; 
-#
-#	my @acc_lang_string = grep(/^\w+(-\w+)?$/, split(/,|;/, $r->headers_in->get('Accept-Language')));
-#	#my $gal_conf_lang = $r->dir_config('PhotoGalVideoPattern') ? $r->dir_config('PhotoGalVideoPattern') : '';
-#	if ($r->dir_config('PhotoGalAcceptedLanguagePattern')) { # should be regex as seen above!
-#		# now loop over join(@acc_lang_string) and find us first match
-#	}
-#	# if nothing matches, return default!
-#	# maybe create sub that returns the list of supported languages 
-#	# TODO loop @acc_ over existing translations and return first matching!
-#	$r->print("Accept-Language: " . $r->headers_in->get('Accept-Language') . "\n");
-#	$r->print("Language codes are: " . join(', ', @acc_lang_string) . "\n");
-#	return;
-#}
+=begin comment
+sub get_page_language {
+	my ($r, $lang) = @_;
+	return unless $r; 
 
-1;
+	my @acc_lang_string = grep(/^\w+(-\w+)?$/, split(/,|;/, $r->headers_in->get('Accept-Language')));
+	#my $gal_conf_lang = $r->dir_config('PhotoGalVideoPattern') ? $r->dir_config('PhotoGalVideoPattern') : '';
+	if ($r->dir_config('PhotoGalAcceptedLanguagePattern')) { # should be regex as seen above!
+		# now loop over join(@acc_lang_string) and find us first match
+	}
+	# if nothing matches, return default!
+	# maybe create sub that returns the list of supported languages 
+	# TODO loop @acc_ over existing translations and return first matching!
+	$r->print("Accept-Language: " . $r->headers_in->get('Accept-Language') . "\n");
+	$r->print("Language codes are: " . join(', ', @acc_lang_string) . "\n");
+	return;
+}
+=end comment
 
 =head1 NAME
 
-Apache2::PhotoGal - The great new Apache2::PhotoGal!
+Apache2::PhotoGal - mod_perl handler to create image and video galleries
 
 =head1 VERSION
 
-Version 0.01
+Version 0.0.1
 
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '0.0.1';
 
 
 =head1 SYNOPSIS
 
-Quick summary of what the module does.
+This module can act as a mod_perl handler for Apache2 to serve nice image
+galleries and image pages created on the fly, examining the webfolder and
+the image properties. At the moment it is work-in-progress and not usable
+for production.
 
-Perhaps a little code snippet.
+This is how to enable and the handler and reload it automatically after
+changing the source code. The latter is only interesting for writing the 
+handler code itself.
 
-    use Apache2::PhotoGal;
+    <Location />
+        Options -Indexes
+        DirectoryIndex disabled
+        PerlSetVar PhotoGalTemplateDir '/usr/share/libapache2-photogal-perl/templates/default/'
+        SetHandler perl-script
+        PerlResponseHandler Apache2::PhotoGal
+    </Location>
 
-    my $foo = Apache2::PhotoGal->new();
-    ...
+The templates can also be copied to a writeable place and adjusted to your
+own specifications as long as the templates use the provided variables.
+Knowledge of the perl template module might be necessary.
 
 =head1 AUTHOR
 
@@ -213,12 +225,8 @@ Danial Leidert, C<< <dleidert at wgdd.de> >>
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C<bug-apache2-photogal at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Apache2-PhotoGal>.  I will be notified, and then you'll
-automatically be notified of progress on your bug as I make changes.
-
-
-
+Please report any bugs or feature requests to C<dleidert at wgdd.de>, or through
+the web interface at L<https://github.com/dleidert/Apache2-PhotoGal/issues>.
 
 =head1 SUPPORT
 
@@ -226,31 +234,25 @@ You can find documentation for this module with the perldoc command.
 
     perldoc Apache2::PhotoGal
 
-
 You can also look for information at:
 
 =over 4
 
-=item * RT: CPAN's request tracker (report bugs here)
+=item * issue tracker (report bugs here)
 
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Apache2-PhotoGal>
+L<https://github.com/dleidert/Apache2-PhotoGal/issues>
 
-=item * AnnoCPAN: Annotated CPAN documentation
+=item * homepage
 
-L<http://annocpan.org/dist/Apache2-PhotoGal>
-
-=item * CPAN Ratings
-
-L<http://cpanratings.perl.org/d/Apache2-PhotoGal>
-
-=item * Search CPAN
-
-L<http://search.cpan.org/dist/Apache2-PhotoGal/>
+L<https://github.com/dleidert/Apache2-PhotoGal>
 
 =back
 
 
 =head1 ACKNOWLEDGEMENTS
+
+The handler is based on the idea behind L<Apache::Gallery> written by
+Michael Legart.
 
 
 =head1 LICENSE AND COPYRIGHT
@@ -293,6 +295,9 @@ CONTRIBUTOR WILL BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, OR
 CONSEQUENTIAL DAMAGES ARISING IN ANY WAY OUT OF THE USE OF THE PACKAGE,
 EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+= head1 SEE ALSO
+
+L<Template>
 
 =cut
 
