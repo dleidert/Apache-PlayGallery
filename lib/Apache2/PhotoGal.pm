@@ -30,8 +30,16 @@ my %param;
 sub handler {
         my $r = shift;
 
-	# don't handle these files / how to handle index.html if existing?
-	if ($r->uri =~ m|/favicon.ico|i) {
+	$param{'IMG_PATT'}   ||= $r->dir_config('PhotoGalImagePattern') ?
+	                         $r->dir_config('PhotoGalImagePattern') : '\.(jpe?g|png|svg|tiff?)$';
+	$param{'VID_PATT'}   ||= $r->dir_config('PhotoGalVideoPattern') ?
+	                         $r->dir_config('PhotoGalVideoPattern') : '\.(flv|mpe?g|mp4|ogg|webm)$';
+
+	# don't handle these files
+	if ( $r->uri =~ m|/favicon.ico|i ||
+	    ($r->finfo->filetype == APR::Const::FILETYPE_REG &&
+	     $r->uri !~ /$param{'IMG_PATT'}/i &&
+	     $r->uri !~ /$param{'VID_PATT'}/i )) {
 		return Apache2::Const::DECLINED;
 	}
 
@@ -41,8 +49,8 @@ sub handler {
 		@list = grep(/^(name|atime|mtime|size)$/, @list);
 		$param{'SORT_ORDER'} = $list[0];
 	}
-	$param{'SORT_ORDER'} = 'name' unless ($param{'SORT_ORDER'});
-	$param{'ISROOT'} = ($r->uri =~ m|^/$|) ? 1 : 0;
+	$param{'SORT_ORDER'} ||= 'name';
+	$param{'ISROOT'}       = ($r->uri =~ m|^/$|) ? 1 : 0;
 
 	# $r->parse_uri($r->uri) https://perl.apache.org/docs/2.0/api/Apache2/URI.html#C_parse_uri_
 	# mod_dir and mod_autoindex tamper with these variables
@@ -59,14 +67,11 @@ sub handler {
 		# handle pages based on content
 		# TODO
 		# serve text files as is, only handle images, videos, ...?
-		my $image_pattern = $r->dir_config('PhotoGalImagePattern') ?
-		                    $r->dir_config('PhotoGalImagePattern') : '\.(jpe?g|png|svg|tiff?)$';
-		my $video_pattern = $r->dir_config('PhotoGalVideoPattern') ?
-		                    $r->dir_config('PhotoGalVideoPattern') : '\.(flv|mpe?g|mp4|ogg|webm)$';
+		$r->content_type('text/plain');
+		$r->print("Image or video file!");
 		return Apache2::Const::OK;
 	}
 	else {
-		# serve 404 or ...?
 		return Apache2::Const::NOT_FOUND;
 	}
 
@@ -153,6 +158,8 @@ sub get_language_list {
 }
 =end comment
 
+=cut
+
 sub log_message {
 	my ($r, $status, $message, $file) = @_;
 	if ($file) {
@@ -182,6 +189,8 @@ sub get_page_language {
 	return;
 }
 =end comment
+
+=cut
 
 =head1 NAME
 
