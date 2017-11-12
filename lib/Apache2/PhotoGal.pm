@@ -104,6 +104,7 @@ sub create_page {
 		PACKAGE => __PACKAGE__ . " ($VERSION)",
 		DIRLIST  => $filelist->{APR::Const::FILETYPE_DIR},
 		FILELIST => $filelist->{APR::Const::FILETYPE_REG},
+		PARAMETERS => \%param,
 	};
 
 	$r->content_type('text/html');

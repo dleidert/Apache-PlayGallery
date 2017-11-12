@@ -13,10 +13,11 @@
 	</header>
 
 	<nav id="navigation">
+[% INCLUDE form_sorting.tpl | indent('		') %] 
 		[% MAIN %]
 		<ul>
 [% FOREACH file IN FILELIST -%]
-			<li><a href="[% file %]">[% file %]</a></li>
+			<li><a href="[% file | url %]">[% file %]</a></li>
 [% END -%]
 		</ul>
 	</nav>

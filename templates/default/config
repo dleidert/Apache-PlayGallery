@@ -1,3 +1,9 @@
 [%
 	HOMEPAGE = 'https://github.com/dleidert/Apache2-PhotoGal'
+	SORTLIST = [
+		{id => 'name',  text => 'Name'}
+		{id => 'size',  text => 'Size'}
+		{id => 'atime', text => 'Access time'}
+		{id => 'mtime', text => 'Modification time'}
+	]
 %]
