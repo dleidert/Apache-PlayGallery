@@ -198,11 +198,11 @@ Apache2::PhotoGal - mod_perl handler to create image and video galleries
 
 =head1 VERSION
 
-Version 0.0.1
+Version 0.01
 
 =cut
 
-our $VERSION = '0.0.1';
+our $VERSION = 0.01;
 
 
 =head1 SYNOPSIS
