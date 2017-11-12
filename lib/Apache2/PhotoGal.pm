@@ -50,6 +50,7 @@ sub handler {
 		$param{'SORT_ORDER'} = $list[0];
 	}
 	$param{'SORT_ORDER'} ||= 'name';
+	$param{'SORT_REVERS'}  = ($cgi->param('rev') == 1) ? 1 : 0;
 	$param{'ISROOT'}       = ($r->uri =~ m|^/$|) ? 1 : 0;
 
 	# $r->parse_uri($r->uri) https://perl.apache.org/docs/2.0/api/Apache2/URI.html#C_parse_uri_
@@ -128,22 +129,28 @@ sub get_files_in_curdir {
 	rewinddir (DIR);
 	my @dirs  = grep { !/^\./ && -d "$dir/$_" } readdir(DIR);
 
-	$list{APR::Const::FILETYPE_REG} = [ sort_files_in_order($r, $dir, @files) ]; 
-	$list{APR::Const::FILETYPE_DIR} = [ sort_files_in_order($r, $dir, @dirs)  ];
+	$list{APR::Const::FILETYPE_REG} = [ sort_files_in_order($r, $dir, \@files) ]; 
+	$list{APR::Const::FILETYPE_DIR} = [ sort_files_in_order($r, $dir, \@dirs)  ];
 	closedir(DIR);
 	return \%list;
 }
 
 sub sort_files_in_order {
-	my ($r, $dir, @list) = @_;
+	my ($r, $dir, $listref) = @_;
+	my @sorted;
 	if ($param{'SORT_ORDER'} =~ /^(atime|mtime|size)$/) {
 		my $sort = $param{'SORT_ORDER'};
 		my %h;
-		return sort { ($h{$a} ||= stat("$dir/$a")->$sort()) <=>
-		              ($h{$b} ||= stat("$dir/$b")->$sort())
-		            } @list;
+		@sorted = sort { ($h{$a} ||= stat("$dir/$a")->$sort()) <=>
+		                 ($h{$b} ||= stat("$dir/$b")->$sort())
+		               } @{$listref};
 	} else {
-		return sort @list;
+		@sorted = sort @{$listref};
+	}
+	if ($param{'SORT_REVERS'}) {
+		return reverse @sorted;
+	} else {
+		return @sorted;
 	}
 }
 
