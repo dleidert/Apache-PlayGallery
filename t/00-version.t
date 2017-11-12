@@ -1,4 +1,4 @@
-#!perl -T
+#!perl
 use 5.006;
 use strict;
 use warnings;
@@ -15,4 +15,4 @@ eval "use Test::Version $min_tv qw(version_all_ok ), {
 plan skip_all => "Test::Version 1.004000 required for testing version numbers" if $@;
 
 version_all_ok();
-done_testing;
+done_testing();
