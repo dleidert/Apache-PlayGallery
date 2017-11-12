@@ -2,6 +2,11 @@ TODO:
 
 - next: add different sorting options
 
+- idea: use a function to retrieve data for an image via template
+  -> either provide a special parameter, or nothing (then use key list
+     provided by option) and return hash. Use EXIF values as keys
+  this function can be memoized!!!!
+
 - use HTML5
 
 - don't become too complex
@@ -24,7 +29,8 @@ TODO:
 
 - image views
 
-  - use links to create image of specified size
+  - use links to create image of specified size (use cleanup phase to create
+    those images?)
   - slideshow?
   - implement zooming feature instead of choosing an image size
   - show image data
