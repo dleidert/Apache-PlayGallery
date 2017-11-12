@@ -50,7 +50,9 @@ sub handler {
 		$param{'SORT_ORDER'} = $list[0];
 	}
 	$param{'SORT_ORDER'} ||= 'name';
-	$param{'SORT_REVERS'}  = ($cgi->param('rev') =~ /\d/ && $cgi->param('rev') == 1) ? 1 : 0;
+	$param{'SORT_REVERS'}  = ($cgi->param('rev') &&
+	                          $cgi->param('rev') =~ /\d/ &&
+	                          $cgi->param('rev') == 1) ? 1 : 0;
 	$param{'ISROOT'}       = ($r->uri =~ m|^/$|) ? 1 : 0;
 
 	# $r->parse_uri($r->uri) https://perl.apache.org/docs/2.0/api/Apache2/URI.html#C_parse_uri_
