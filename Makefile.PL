@@ -12,17 +12,28 @@ WriteMakefile(
     LICENSE          => 'artistic',
     PL_FILES         => {},
     CONFIGURE_REQUIRES => {
-        'ExtUtils::MakeMaker' => '0'
+        'ExtUtils::MakeMaker' => '0',
     },
     BUILD_REQUIRES => {
         'Test::More' => '0',
+        'Test::CheckManifest' => '0.9',
+        'Test::Pod' => '1.22',
+        'Test::Pod::Coverage' => '1.08',
+        'Data::Dumper' => '0',
     },
     PREREQ_PM => {
-        'Apache2::Reload' => '0'
+        'Apache2::Reload' => '0',
+        'CGI' => '0',
+        'Data::Dumper' => '0',
+        'File::Basename' => '0',
+        'File::stat' => '0',
+        'Memoize' => '0',
+        'Template' => '0',
+
     },
     META_MERGE => {
         'meta-spec' => {
-             version => '2'
+             version => '2',
         },
         resources => {
             repository => {
@@ -32,8 +43,8 @@ WriteMakefile(
             },
             bugtracker => {
                 web => $repo . '/issues',
-                mailto => 'dleidert@wgdd.de'
-            }
+                mailto => 'dleidert@wgdd.de',
+            },
         },
     },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
