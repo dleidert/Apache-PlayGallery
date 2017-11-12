@@ -6,6 +6,7 @@ TODO:
   -> either provide a special parameter, or nothing (then use key list
      provided by option) and return hash. Use EXIF values as keys
   this function can be memoized!!!!
+  - use another function to retrieve the localized parameter name?
 
 - use HTML5
 
