@@ -47,15 +47,19 @@ sub handler {
 	}
 
 	my $cgi = CGI->new();
+	if ($cgi->param('raw')) {
+		# if image and width/height -> forward to resized image?
+		return Apache2::Const::DECLINED;
+	}
+
+	# change to scalar context!
 	if ($cgi->param('sort_by')) {
 		my @list = $cgi->param('sort_by');
 		@list = grep(/^(name|atime|mtime|size)$/, @list);
 		$param{'SORT_ORDER'} = $list[0];
 	}
 	$param{'SORT_ORDER'} ||= 'name';
-	$param{'SORT_REVERS'}  = ($cgi->param('rev') &&
-	                          $cgi->param('rev') =~ /\d/ &&
-	                          $cgi->param('rev') == 1) ? 1 : 0;
+	$param{'SORT_REVERS'}  = ($cgi->param('rev') && $cgi->param('rev') =~ /^(1|on)$/) ? 1 : 0;
 	$param{'ISROOT'}       = ($r->uri =~ m|^/$|) ? 1 : 0;
 
 	# $r->parse_uri($r->uri) https://perl.apache.org/docs/2.0/api/Apache2/URI.html#C_parse_uri_
