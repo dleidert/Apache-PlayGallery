@@ -20,8 +20,11 @@ use CGI qw(:standard);
 use Data::Dumper qw(Dumper);
 use File::Basename qw(dirname);
 use File::stat;
-#use POSIX;
-#use Locale::TextDomain 'Apache2-PhotoGal';
+BEGIN {
+	use POSIX qw(:locale_h);
+	use Locale::TextDomain qw(Apache2-PhotoGal);
+	setlocale(LC_MESSAGES, '');
+}
 use Memoize;
 use Template;
 
@@ -101,7 +104,7 @@ sub create_page {
 
 	my $filelist = get_files_in_curdir($r);
 	my $vars = {
-		TITLE => 'Mein Titel',
+		TITLE => __("Directory"),
 		MAIN => "<!-- " . __PACKAGE__ . "," . __LINE__ . ": directory = $dir -->",
 		PACKAGE => __PACKAGE__ . " ($VERSION)",
 		DIRLIST  => $filelist->{APR::Const::FILETYPE_DIR},
@@ -158,6 +161,9 @@ sub sort_files_in_order {
 }
 
 =begin comment
+# setlocale() is picky and needs charset too
+# get charset from header?
+# use Locale::Util to get requested langauges?
 sub get_language_list {
 	my $r = shift;
 	return unless $r;
