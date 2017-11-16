@@ -14,7 +14,7 @@ WriteMakefile(
     CONFIGURE_REQUIRES => {
         'ExtUtils::MakeMaker' => '0',
     },
-    BUILD_REQUIRES => {
+    TEST_REQUIRES => {
         'Test::More' => '0',
         'Test::CheckManifest' => '0.9',
         'Test::Pod' => '1.22',
@@ -27,7 +27,9 @@ WriteMakefile(
         'Data::Dumper' => '0',
         'File::Basename' => '0',
         'File::stat' => '0',
+        'Locale::TextDomain' => '0',
         'Memoize' => '0',
+        'POSIX' => '0',
         'Template' => '0',
 
     },
