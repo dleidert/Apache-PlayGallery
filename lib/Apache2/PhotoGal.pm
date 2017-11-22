@@ -77,9 +77,14 @@ sub handler {
 		# handle pages based on content
 		# TODO
 		# serve text files as is, only handle images, videos, ...?
-		$r->content_type('text/plain');
-		$r->print("Image or video file!");
-		return Apache2::Const::OK;
+		if (defined($cgi->param('view'))) {
+			my $viewsize = $cgi->param('view');
+			return show_file($r, $viewsize);
+		} else {
+			$r->content_type('text/plain');
+			$r->print("Image or video file!");
+			return Apache2::Const::OK;
+		}
 	}
 	else {
 		return Apache2::Const::NOT_FOUND;
@@ -90,6 +95,12 @@ sub handler {
 	# shouldn't get here
         return Apache2::Const::OK;
 }
+
+sub show_file {
+	my ($r, $size) = @_;
+	return Apache2::Const::DECLINED;
+}
+
 
 # show page and return HTTP code accordingly?
 sub create_page {
