@@ -107,9 +107,7 @@ sub create_page {
 	my ($r, $file) = @_;
 	
 	my $dir = $r->dir_config('PhotoGalTemplateDir');
-	unless (-d $dir) {
-		return log_message($r, Apache2::Const::SERVER_ERROR, 'PhotoGalTemplateDir not set or not existing', $dir);
-	}
+	return log_message($r, Apache2::Const::SERVER_ERROR, 'PhotoGalTemplateDir not set or not existing.', $dir) unless (-d $dir);
 
 	my $template = Template->new({
 		INCLUDE_PATH  => $dir,
