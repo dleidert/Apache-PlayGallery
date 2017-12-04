@@ -2,11 +2,19 @@ TODO:
 
 - next: add different sorting options
 
+- implement view parameter, that works like this: ?view=w100, h200,
+  w100-h200, h200-w100 and without something useful, show picture;
+  the sub must create the picture in question and use a cache!
+
+- idea: add a parameter page=1,2,... to split directory views into
+  pieces. Add a parameter to define number of pictures to show.
+
 - idea: use a function to retrieve data for an image via template
   -> either provide a special parameter, or nothing (then use key list
      provided by option) and return hash. Use EXIF values as keys
   this function can be memoized!!!!
   - use another function to retrieve the localized parameter name?
+  - this function should be called from template files
 
 - use HTML5
 
