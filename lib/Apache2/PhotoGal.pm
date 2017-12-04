@@ -25,6 +25,9 @@ BEGIN {
 	use Locale::TextDomain qw(Apache2-PhotoGal);
 	setlocale(LC_MESSAGES, '');
 }
+#use Image::Magick;
+use GD;
+use Image::Size qw(imgsize);
 use Memoize;
 use Template;
 
@@ -78,8 +81,9 @@ sub handler {
 		# TODO
 		# serve text files as is, only handle images, videos, ...?
 		if (defined($cgi->param('view'))) {
-			my $viewsize = $cgi->param('view');
-			return show_file($r, $viewsize);
+			my $size = $cgi->param('view');
+			my $keepratio = (defined($cgi->param('keepratio')) && ! $cgi->param('keepratio')) ? 0 : 1;
+			return show_file($r, $size, $keepratio);
 		} else {
 			$r->content_type('text/plain');
 			$r->print("Image or video file!");
@@ -96,9 +100,50 @@ sub handler {
         return Apache2::Const::OK;
 }
 
+sub create_thumb {
+	my $r = shift;
+	return show_file ($r, '100x100', 0);
+}
+
 sub show_file {
-	my ($r, $size) = @_;
-	return Apache2::Const::DECLINED;
+	my ($r, $size, $constraint) = @_;
+	return Apache2::Const::DECLINED unless ($r->uri =~ /$param{'IMG_PATT'}/i);
+	return Apache2::Const::DECLINED unless ($size =~ /\d+x\d+/i);
+	$r->log->debug(__PACKAGE__, ": filename=", $r->filename, ", Content-Type=", $r->content_type, ", constr=", $constraint);
+	my $content = $r->content_type();
+	my ($o_width, $o_height) = imgsize($r->filename());
+	my ($n_width, $n_height) = split(/x/, $size);
+	return Apache2::Const::DECLINED unless ($n_width < $o_width || $n_height < $o_height);
+	unless ($constraint == 0) {
+		my $w_ratio = $n_width / $o_width;
+		my $h_ratio = $n_height / $o_height;
+		my $ratio = ($w_ratio < $h_ratio) ? $w_ratio : $h_ratio;
+		$n_width = $ratio * $o_width;
+		$n_height = $ratio * $o_height;
+	}
+	my $o_image = GD::Image->new($r->filename()) ||
+		return log_message($r, Apache2::Const::SERVER_ERROR, "Error loading image file.", $r->filename());
+	my $n_image = GD::Image->new($n_width, $n_height) ||
+		return log_message($r, Apache2::Const::SERVER_ERROR, "Error creating resized image file.", $r->filename());
+	$n_image->copyResampled($o_image, 0, 0, 0, 0, $n_width, $n_height, $o_width, $o_height);
+	$r->content_type($content);
+	$r->print($n_image->jpeg);
+	return Apache2::Const::OK;
+#	# handle size attribute
+#	my $err;
+#	my $image = Image::Magick->new() || return log_message($r, Apache2::Const::SERVER_ERROR, 'Error initiating Image::Magick.');
+#	if ($err = $image->Read(filename => $r->filename())) {
+#		return log_message($r, Apache2::Const::SERVER_ERROR, "Error '$err' loading image file.", $r->filename());
+#	}
+#	if ($err = $image->Resize(geometry => '100x100')) {
+#		return log_message($r, Apache2::Const::SERVER_ERROR, "Error '$err' resizing image file.", $r->filename());
+#	}
+#	# write to temporary file using IO::File? but how to cache?
+#	$r->content_type('image/gif');
+#	binmode STDOUT;
+#	$image->Write('gif:-');
+#	return Apache2::Const::OK;
+#	# return DECLINED if without size attribute
 }
 
 
